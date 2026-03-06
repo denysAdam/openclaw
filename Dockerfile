@@ -107,7 +107,8 @@ RUN pnpm ui:build
 # Expose the CLI binary without requiring npm global writes as non-root.
 USER root
 RUN ln -sf /app/openclaw.mjs /usr/local/bin/openclaw \
- && chmod 755 /app/openclaw.mjs
+ && chmod 755 /app/openclaw.mjs \
+ && chmod +x /app/start.sh
 
 ENV NODE_ENV=production
 
@@ -128,6 +129,8 @@ USER node
 #   - GET /healthz (liveness) and GET /readyz (readiness)
 #   - aliases: /health and /ready
 # For external access from host/ingress, override bind to "lan" and set auth.
+# Render/Fly: start.sh uses PORT env and --bind lan for health checks
 HEALTHCHECK --interval=3m --timeout=10s --start-period=15s --retries=3 \
-  CMD node -e "fetch('http://127.0.0.1:18789/healthz').then((r)=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
-CMD ["node", "openclaw.mjs", "gateway", "--allow-unconfigured"]
+  CMD node -e "const p=process.env.PORT||'18789'; fetch('http://127.0.0.1:'+p+'/healthz').then((r)=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
+RUN chmod +x /app/start.sh
+CMD ["./start.sh"]

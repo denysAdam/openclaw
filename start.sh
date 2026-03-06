@@ -7,4 +7,6 @@ if [ ! -f /data/.openclaw/openclaw.json ] && [ -f "$SCRIPT_DIR/openclaw.json" ];
   cp "$SCRIPT_DIR/openclaw.json" /data/.openclaw/openclaw.json
 fi
 
-exec node openclaw.mjs gateway --allow-unconfigured
+# Render/Fly: PORT из env, bind на 0.0.0.0 чтобы health check доходил
+export OPENCLAW_GATEWAY_PORT="${PORT:-18789}"
+exec node openclaw.mjs gateway --allow-unconfigured --port "$OPENCLAW_GATEWAY_PORT" --bind lan
